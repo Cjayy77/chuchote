@@ -19,6 +19,7 @@ import time
 import numpy as np
 
 from .audio import MicStream, PushToTalkRecorder, SpeechEngine, make_chime
+from .banner import render as render_banner
 from .config import Config
 from .llm import Reasoner
 from .memory import Memory
@@ -262,9 +263,12 @@ class Assistant:
     # --- entry point ------------------------------------------------------
     def run(self) -> None:
         mode = self.config.mode
+        banner = render_banner(self.config)
+        if banner:
+            print(banner)
         label = "push-to-talk" if mode == "ptt" else f"wake word: {self.config.wake_model}"
-        print(f"Chuchote — local voice assistant ({label} + memory)")
-        print(f"model: {self.config.ollama_model}  |  whisper: {self.config.whisper_model}")
+        print(f"mode: {label}  |  model: {self.config.ollama_model}"
+              f"  |  whisper: {self.config.whisper_model}")
 
         # Fail fast + warm up so the first turn isn't slow and missing
         # voice/model/Ollama is caught up front.

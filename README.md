@@ -4,13 +4,11 @@ Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk
 to a local LLM and get a spoken answer — wake word → speech-to-text → local
 reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
 
-> **Status: Phase 4 — barge-in.** Wake word → speech capture (Silero VAD
-> end-of-turn) → faster-whisper → Ollama → Piper → speaker, with memory across
-> restarts and the ability to **interrupt a reply** by saying the wake word
-> again. Sentences are synthesised on a worker thread while the model keeps
-> generating, so speech starts sooner. Push-to-talk remains a fallback
-> (`--ptt`). Next up is polish (config file, install script — see
-> [CLAUDE.md](CLAUDE.md)).
+> **Status: Phase 5 — the CLI MVP is complete.** Wake word → speech capture
+> (Silero VAD end-of-turn) → faster-whisper → Ollama → Piper → speaker, with
+> memory across restarts, barge-in to interrupt a reply, overlapped synthesis,
+> a config file, and an install script. Push-to-talk remains a fallback
+> (`--ptt`). See [CLAUDE.md](CLAUDE.md) for what's next.
 
 ## Pipeline
 
@@ -37,6 +35,14 @@ python -m venv .venv
 # Windows:  .venv\Scripts\activate
 # macOS/Linux:  source .venv/bin/activate
 pip install -e .
+```
+
+Or use the install script, which also downloads a default Piper voice and
+writes a config file:
+
+```sh
+./scripts/install.ps1     # Windows (PowerShell)
+./scripts/install.sh      # macOS/Linux
 ```
 
 ## Run
@@ -91,8 +97,19 @@ Tune how much history is injected via `history_messages` in
 
 ## Configuration
 
-Settings come from CLI flags over sensible defaults (see
-[chuchote/config.py](chuchote/config.py) for the full list and VAD tunables):
+Persist your settings in a config file instead of passing flags every time:
+
+```sh
+chuchote init              # writes a commented config.toml to your config dir
+```
+
+Edit the file (its path is printed by `init`; typically `%APPDATA%\chuchote\`
+on Windows or `~/.config/chuchote/` elsewhere), uncomment what you want to
+change, and it's picked up on the next `chuchote start`. Point at a specific
+file with `--config PATH`. Precedence is **defaults < config file < flags**.
+
+Flags (over sensible defaults; see [chuchote/config.py](chuchote/config.py) for
+the full list and VAD tunables):
 
 | Flag | Default | Meaning |
 |---|---|---|
@@ -106,8 +123,8 @@ Settings come from CLI flags over sensible defaults (see
 | `--ptt` | off | use push-to-talk instead of the wake word |
 | `--ptt-key` | `space` | push-to-talk key to hold (with `--ptt`) |
 | `--forget` | off | clear conversation memory before starting |
-
-A proper config file lands in Phase 5.
+| `--no-banner` | off | don't print the startup banner |
+| `--config` | per-user config dir | path to a config file |
 
 ## License
 

@@ -9,7 +9,8 @@ from .config import Config
 
 
 def _cmd_start(args: argparse.Namespace) -> None:
-    config = Config()
+    # Precedence: defaults < config file < command-line flags.
+    config = Config.load(args.config)
     if args.model:
         config.ollama_model = args.model
     if args.whisper_model:
@@ -28,6 +29,8 @@ def _cmd_start(args: argparse.Namespace) -> None:
         config.wake_chime = False
     if args.barge_in:
         config.barge_in_mode = args.barge_in
+    if args.no_banner:
+        config.banner = False
 
     if args.forget:
         # Start fresh: wipe persisted history before the session.
@@ -50,6 +53,19 @@ def _cmd_forget(args: argparse.Namespace) -> None:
     print("Conversation memory cleared.")
 
 
+def _cmd_init(args: argparse.Namespace) -> None:
+    import os
+
+    from .config import default_config_path, write_default_config
+
+    path = args.path or default_config_path()
+    if os.path.exists(path) and not args.force:
+        print(f"Config already exists at {path}\nUse --force to overwrite.")
+        return
+    write_default_config(path)
+    print(f"Wrote default config to {path}\nEdit it, or override any setting with a flag.")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="chuchote",
@@ -59,6 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
 
     start = sub.add_parser("start", help="Start the voice assistant loop.")
+    start.add_argument("--config", help="Path to a config file (default: per-user config dir).")
     start.add_argument("--model", help="Ollama model to use (e.g. llama3.2).")
     start.add_argument("--whisper-model", help="faster-whisper model (e.g. base.en).")
     start.add_argument("--voice", help="Path to a Piper .onnx voice model.")
@@ -91,6 +108,11 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     start.add_argument(
+        "--no-banner",
+        action="store_true",
+        help="Don't print the startup banner.",
+    )
+    start.add_argument(
         "--forget",
         action="store_true",
         help="Clear conversation memory before starting.",
@@ -99,6 +121,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     forget = sub.add_parser("forget", help="Erase all saved conversation memory.")
     forget.set_defaults(func=_cmd_forget)
+
+    init = sub.add_parser("init", help="Write a default config file you can edit.")
+    init.add_argument("--path", help="Where to write it (default: per-user config dir).")
+    init.add_argument(
+        "--force", action="store_true", help="Overwrite an existing config file."
+    )
+    init.set_defaults(func=_cmd_init)
 
     return parser
 

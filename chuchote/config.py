@@ -1,14 +1,15 @@
-"""Configuration for the core round-trip.
+"""Configuration for Chuchote.
 
-Phase 1 keeps this to an in-code dataclass with sensible defaults. A real
-config file (`~/.config/chuchote/config.toml` or similar) is Phase 5 work —
-don't add file loading here until we get there.
+Defaults live in the `Config` dataclass. `Config.load()` overlays a TOML config
+file (`chuchote init` writes a template), and the CLI overlays flags on top of
+that — so precedence is defaults < config file < command-line flags.
 """
 
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+import sys
+from dataclasses import dataclass, field, fields
 
 
 def user_data_dir() -> str:
@@ -18,6 +19,20 @@ def user_data_dir() -> str:
     else:
         base = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
     return os.path.join(base, "chuchote")
+
+
+def user_config_dir() -> str:
+    """Platform-appropriate per-user config directory."""
+    if os.name == "nt":
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, "chuchote")
+
+
+def default_config_path() -> str:
+    """Per-user TOML config path."""
+    return os.path.join(user_config_dir(), "config.toml")
 
 
 def user_voice_dir() -> str:
@@ -104,3 +119,89 @@ class Config:
     # ~12 ≈ the last 6 exchanges — enough for continuity without bloating the
     # prompt or slowing generation.
     history_messages: int = 12
+
+    # --- Interface --------------------------------------------------------
+    banner: bool = True  # print the startup banner
+
+    @classmethod
+    def load(cls, path: str | None = None) -> "Config":
+        """Build a Config from defaults overlaid with a TOML file if present.
+
+        Unknown keys are warned about and ignored. Keys map 1:1 to the field
+        names below (top-level, or under an optional [chuchote] table).
+        """
+        cfg = cls()
+        path = path or default_config_path()
+        if not os.path.exists(path):
+            return cfg
+
+        import tomllib
+
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+        if "chuchote" in data and isinstance(data["chuchote"], dict):
+            data = data["chuchote"]
+
+        known = {f.name for f in fields(cls)}
+        for key, value in data.items():
+            if key in known:
+                setattr(cfg, key, value)
+            else:
+                print(f"(config: ignoring unknown key '{key}')", file=sys.stderr)
+        return cfg
+
+
+# Template written by `chuchote init`. Every setting is shown commented at its
+# default; uncomment and edit what you want to change.
+CONFIG_TEMPLATE = """\
+# Chuchote configuration. Uncomment a line to override the default.
+# Command-line flags still take precedence over this file.
+
+# --- Reasoning (Ollama) ---
+# ollama_model = "llama3.2"
+# ollama_host = "http://localhost:11434"
+
+# --- Turn-taking ---
+# mode = "wake"              # "wake" (always-on) or "ptt" (push-to-talk)
+
+# --- Wake word ---
+# wake_model = "hey_jarvis"  # also: alexa, hey_mycroft, hey_rhasspy
+# wake_threshold = 0.5       # 0..1; raise to reduce false triggers
+# wake_chime = true          # tone acknowledging the wake word
+
+# --- Barge-in (interrupt a reply) ---
+# barge_in_mode = "wake"     # "wake", "vad" (headphones), or "off"
+
+# --- Voice activity detection (end-of-turn) ---
+# vad_speech_threshold = 0.5
+# vad_silence_ms = 800       # trailing silence that ends your turn
+# vad_start_timeout_s = 8.0
+# vad_max_utterance_s = 30.0
+
+# --- Push-to-talk ---
+# ptt_key = "space"
+# ptt_tail_seconds = 0.4
+
+# --- Speech-to-text (faster-whisper) ---
+# whisper_model = "base.en"  # try "small.en" for better accuracy
+# whisper_device = "auto"    # "cpu", "cuda", or "auto"
+# whisper_compute_type = "default"
+
+# --- Text-to-speech (Piper) ---
+# piper_voice = ""           # path to a .onnx voice; blank = auto-discover
+
+# --- Memory ---
+# history_messages = 12      # prior messages fed back into context
+
+# --- Interface ---
+# banner = true
+"""
+
+
+def write_default_config(path: str | None = None) -> str:
+    """Write the commented config template. Returns the path written."""
+    path = path or default_config_path()
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(CONFIG_TEMPLATE)
+    return path
