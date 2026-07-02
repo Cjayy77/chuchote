@@ -26,6 +26,8 @@ def _cmd_start(args: argparse.Namespace) -> None:
         config.wake_threshold = args.wake_threshold
     if args.no_chime:
         config.wake_chime = False
+    if args.barge_in:
+        config.barge_in_mode = args.barge_in
 
     if args.forget:
         # Start fresh: wipe persisted history before the session.
@@ -79,6 +81,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-chime",
         action="store_true",
         help="Disable the acknowledgement tone after the wake word.",
+    )
+    start.add_argument(
+        "--barge-in",
+        choices=["wake", "vad", "off"],
+        help=(
+            "How to interrupt a reply: 'wake' (say the wake word again; default, "
+            "works with speakers), 'vad' (any speech; headphones only), 'off'."
+        ),
     )
     start.add_argument(
         "--forget",

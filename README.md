@@ -4,11 +4,13 @@ Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk
 to a local LLM and get a spoken answer — wake word → speech-to-text → local
 reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
 
-> **Status: Phase 3 — always-listening.** Wake word → speech capture (with
-> Silero VAD deciding when you've finished) → faster-whisper → Ollama → Piper →
-> speaker, with recent turns remembered across the conversation and across
-> restarts. Push-to-talk remains as a fallback (`--ptt`). Barge-in (interrupting
-> playback) is the next phase (see [CLAUDE.md](CLAUDE.md)).
+> **Status: Phase 4 — barge-in.** Wake word → speech capture (Silero VAD
+> end-of-turn) → faster-whisper → Ollama → Piper → speaker, with memory across
+> restarts and the ability to **interrupt a reply** by saying the wake word
+> again. Sentences are synthesised on a worker thread while the model keeps
+> generating, so speech starts sooner. Push-to-talk remains a fallback
+> (`--ptt`). Next up is polish (config file, install script — see
+> [CLAUDE.md](CLAUDE.md)).
 
 ## Pipeline
 
@@ -57,6 +59,12 @@ include `alexa`, `hey_mycroft`, and `hey_rhasspy` (`--wake-word`); raise
 `--wake-threshold` if you get false triggers. A short tone confirms the wake
 word — silence it with `--no-chime`.
 
+**Barge-in.** While Chuchote is speaking, say the wake word again to cut it off
+and start a new turn (`--barge-in wake`, the default — echo-robust, works with
+open speakers). With headphones you can use `--barge-in vad` so *any* speech
+interrupts; `--barge-in off` lets every reply finish. In push-to-talk mode,
+pressing the PTT key cuts off the reply (then hold it to speak again).
+
 ### Push-to-talk fallback
 
 Prefer holding a key? Skip the wake word entirely:
@@ -94,6 +102,7 @@ Settings come from CLI flags over sensible defaults (see
 | `--wake-word` | `hey_jarvis` | wake word model (`alexa`, `hey_mycroft`, `hey_rhasspy`) |
 | `--wake-threshold` | `0.5` | wake sensitivity 0..1 (higher = fewer false triggers) |
 | `--no-chime` | off | disable the wake-word acknowledgement tone |
+| `--barge-in` | `wake` | interrupt a reply: `wake` / `vad` (headphones) / `off` |
 | `--ptt` | off | use push-to-talk instead of the wake word |
 | `--ptt-key` | `space` | push-to-talk key to hold (with `--ptt`) |
 | `--forget` | off | clear conversation memory before starting |

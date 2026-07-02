@@ -1,8 +1,7 @@
-"""Microphone capture (push-to-talk) and speaker playback.
+"""Microphone capture (push-to-talk + continuous) and speech playback.
 
-Phase 1 uses push-to-talk: hold a key, speak, release. No wake word or VAD
-yet — that's Phase 3. Capture and playback both run through sounddevice so we
-share one audio backend.
+Capture (PushToTalkRecorder, MicStream) and playback (SpeechEngine) all run
+through sounddevice so we share one audio backend.
 """
 
 from __future__ import annotations
@@ -16,6 +15,16 @@ import numpy as np
 import sounddevice as sd
 
 from .config import Config
+
+
+def _report_status(status) -> None:  # noqa: ANN001
+    """Print sounddevice callback warnings, except input overflow.
+
+    Input overflow just means a few mic frames were dropped while the CPU was
+    busy (e.g. synthesising/reasoning during a reply). It's expected under load
+    and harmless here, so we don't spam it."""
+    if status and not status.input_overflow:
+        print(f"(audio: {status})", file=sys.stderr)
 
 
 class PushToTalkRecorder:
@@ -67,8 +76,7 @@ class PushToTalkRecorder:
                 return False  # stop listener
 
         def callback(indata, n_frames, time_info, status):  # noqa: ANN001
-            if status:
-                print(f"(audio: {status})", file=sys.stderr)
+            _report_status(status)
             # Only keep audio between key-press and (release + tail).
             if capturing.is_set():
                 frames.append(indata.copy())
@@ -107,40 +115,79 @@ class PushToTalkRecorder:
         return np.concatenate(frames, axis=0).reshape(-1)
 
 
-class Player:
-    """Serialised speaker playback.
+class SpeechEngine:
+    """Background TTS synthesis + interruptible playback.
 
-    A single worker thread drains a queue of (samples, sample_rate) chunks so
-    sentence-chunked TTS can be enqueued as it's synthesised and played back
-    gaplessly in order.
+    Sentences are enqueued as *text* and synthesised on a worker thread, so the
+    reasoning loop can keep streaming tokens while earlier sentences are still
+    being spoken (the synthesis/generation overlap). Playback is written in
+    small blocks so it can be cut off mid-sentence for barge-in.
     """
 
-    def __init__(self):
+    def __init__(self, speaker, blocksize: int = 1024):
+        self.speaker = speaker
+        self.blocksize = blocksize
         self._q: queue.Queue = queue.Queue()
+        self._interrupt = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
     def _run(self):
         while True:
             item = self._q.get()
-            if item is None:
-                self._q.task_done()
-                continue
-            samples, sample_rate = item
             try:
-                sd.play(samples, samplerate=sample_rate)
-                sd.wait()
+                if item is None or self._interrupt.is_set():
+                    continue
+                kind = item[0]
+                if kind == "text":
+                    samples = self.speaker.synthesize(item[1])
+                    sample_rate = self.speaker.sample_rate
+                else:  # ("pcm", samples, sample_rate)
+                    samples, sample_rate = item[1], item[2]
+                if samples is None or len(samples) == 0 or self._interrupt.is_set():
+                    continue
+                self._play(samples, sample_rate)
             except Exception as exc:  # keep the loop alive on playback errors
                 print(f"(playback error: {exc})", file=sys.stderr)
             finally:
                 self._q.task_done()
 
-    def play(self, samples: np.ndarray, sample_rate: int) -> None:
-        self._q.put((samples, sample_rate))
+    def _play(self, samples: np.ndarray, sample_rate: int) -> None:
+        samples = np.asarray(samples)
+        if samples.ndim == 1:
+            samples = samples.reshape(-1, 1)
+        with sd.OutputStream(
+            samplerate=sample_rate,
+            channels=samples.shape[1],
+            dtype=samples.dtype,
+        ) as out:
+            for i in range(0, len(samples), self.blocksize):
+                if self._interrupt.is_set():
+                    break
+                out.write(samples[i : i + self.blocksize])
+
+    def say(self, text: str) -> None:
+        self._q.put(("text", text))
+
+    def play_pcm(self, samples: np.ndarray, sample_rate: int) -> None:
+        self._q.put(("pcm", samples, sample_rate))
 
     def wait(self) -> None:
-        """Block until everything queued so far has finished playing."""
+        """Block until everything queued so far has finished (or was cut off)."""
         self._q.join()
+
+    def interrupt(self) -> None:
+        """Stop playback immediately and discard anything still queued."""
+        self._interrupt.set()
+        while not self._q.empty():
+            try:
+                self._q.get_nowait()
+                self._q.task_done()
+            except queue.Empty:
+                break
+
+    def clear_interrupt(self) -> None:
+        self._interrupt.clear()
 
 
 # Wake-word and VAD both operate on 16 kHz int16 audio; Silero needs exactly
@@ -163,8 +210,7 @@ class MicStream:
 
     def __enter__(self) -> "MicStream":
         def callback(indata, n_frames, time_info, status):  # noqa: ANN001
-            if status:
-                print(f"(audio: {status})", file=sys.stderr)
+            _report_status(status)
             self._q.put(indata.copy().reshape(-1))
 
         self._stream = sd.InputStream(

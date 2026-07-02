@@ -52,6 +52,14 @@ class Config:
     wake_threshold: float = 0.5  # detection score 0..1; raise to reduce false triggers
     wake_chime: bool = True  # play a short tone to acknowledge the wake word
 
+    # --- Barge-in (interrupt playback) -----------------------------------
+    # "wake": say the wake word again to cut off a reply (echo-robust, works
+    #         with open speakers — the default).
+    # "vad":  any speech interrupts (only reliable with headphones; open
+    #         speakers cause the assistant to interrupt its own audio).
+    # "off":  never interrupt; let each reply finish.
+    barge_in_mode: str = "wake"
+
     # --- VAD (Silero, end-of-turn) ---------------------------------------
     vad_speech_threshold: float = 0.5  # per-frame speech probability cutoff
     vad_silence_ms: int = 800  # trailing silence that ends a turn
