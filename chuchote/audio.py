@@ -141,3 +141,85 @@ class Player:
     def wait(self) -> None:
         """Block until everything queued so far has finished playing."""
         self._q.join()
+
+
+# Wake-word and VAD both operate on 16 kHz int16 audio; Silero needs exactly
+# 512-sample frames, so that's the stream block size and the unit both consume.
+FRAME_SAMPLES = 512
+
+
+class MicStream:
+    """Continuous 16 kHz int16 microphone stream for always-listening mode.
+
+    Yields fixed-size int16 frames via read(). Used as a context manager so the
+    stream stays open across wake-word detection and utterance capture.
+    """
+
+    def __init__(self, config: Config, blocksize: int = FRAME_SAMPLES):
+        self.config = config
+        self.blocksize = blocksize
+        self._q: queue.Queue[np.ndarray] = queue.Queue()
+        self._stream: sd.InputStream | None = None
+
+    def __enter__(self) -> "MicStream":
+        def callback(indata, n_frames, time_info, status):  # noqa: ANN001
+            if status:
+                print(f"(audio: {status})", file=sys.stderr)
+            self._q.put(indata.copy().reshape(-1))
+
+        self._stream = sd.InputStream(
+            samplerate=self.config.sample_rate,
+            channels=self.config.channels,
+            dtype="int16",
+            blocksize=self.blocksize,
+            callback=callback,
+        )
+        self._stream.start()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        if self._stream is not None:
+            self._stream.stop()
+            self._stream.close()
+            self._stream = None
+
+    def read(self, timeout: float | None = 0.5) -> np.ndarray | None:
+        try:
+            return self._q.get(timeout=timeout)
+        except queue.Empty:
+            return None
+
+    def flush(self) -> None:
+        """Drop any buffered frames (e.g. the assistant's own TTS output)."""
+        while not self._q.empty():
+            try:
+                self._q.get_nowait()
+            except queue.Empty:
+                break
+
+    def pause(self) -> None:
+        """Stop capturing (e.g. during transcription/reply) to avoid input
+        overflow and free the CPU. No barge-in yet, so we don't need the mic
+        while responding."""
+        if self._stream is not None and self._stream.active:
+            self._stream.stop()
+
+    def resume(self) -> None:
+        if self._stream is not None and not self._stream.active:
+            self._stream.start()
+
+
+def make_chime(sample_rate: int) -> np.ndarray:
+    """A short two-note rising chime to acknowledge the wake word."""
+
+    def tone(freq: float, seconds: float) -> np.ndarray:
+        t = np.linspace(0, seconds, int(sample_rate * seconds), endpoint=False)
+        wave = 0.25 * np.sin(2 * np.pi * freq * t)
+        # 10 ms fade in/out so it doesn't click.
+        fade = max(1, int(0.01 * sample_rate))
+        env = np.ones_like(wave)
+        env[:fade] = np.linspace(0, 1, fade)
+        env[-fade:] = np.linspace(1, 0, fade)
+        return wave * env
+
+    return np.concatenate([tone(660, 0.09), tone(990, 0.11)]).astype(np.float32)

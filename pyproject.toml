@@ -12,8 +12,6 @@ license = { text = "MIT" }
 authors = [{ name = "Chuchote contributors" }]
 keywords = ["voice", "assistant", "ollama", "local", "whisper", "piper", "tts", "stt"]
 
-# Phase 1 (core round-trip) dependencies only. Wake word / VAD / memory
-# libraries are intentionally deferred to their build-order phases.
 dependencies = [
     "sounddevice>=0.4.6",  # mic capture + speaker playback
     "numpy>=1.24",         # audio buffers
@@ -21,6 +19,8 @@ dependencies = [
     "ollama>=0.3",         # local reasoning (talks to localhost:11434)
     "piper-tts>=1.2",      # local TTS
     "pynput>=1.7",         # push-to-talk key handling
+    "openwakeword>=0.6",   # always-on wake word (onnxruntime, no API key)
+    "pysilero-vad>=2.0",   # end-of-turn detection (Silero VAD, onnxruntime)
 ]
 
 [project.scripts]

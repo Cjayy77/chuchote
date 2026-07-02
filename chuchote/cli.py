@@ -18,6 +18,14 @@ def _cmd_start(args: argparse.Namespace) -> None:
         config.piper_voice = args.voice
     if args.ptt_key:
         config.ptt_key = args.ptt_key
+    if args.ptt:
+        config.mode = "ptt"
+    if args.wake_word:
+        config.wake_model = args.wake_word
+    if args.wake_threshold is not None:
+        config.wake_threshold = args.wake_threshold
+    if args.no_chime:
+        config.wake_chime = False
 
     if args.forget:
         # Start fresh: wipe persisted history before the session.
@@ -52,7 +60,26 @@ def build_parser() -> argparse.ArgumentParser:
     start.add_argument("--model", help="Ollama model to use (e.g. llama3.2).")
     start.add_argument("--whisper-model", help="faster-whisper model (e.g. base.en).")
     start.add_argument("--voice", help="Path to a Piper .onnx voice model.")
+    start.add_argument(
+        "--ptt",
+        action="store_true",
+        help="Use push-to-talk instead of the wake word (hold --ptt-key).",
+    )
     start.add_argument("--ptt-key", help="Push-to-talk key to hold (default: space).")
+    start.add_argument(
+        "--wake-word",
+        help="Wake word model (e.g. hey_jarvis, alexa, hey_mycroft).",
+    )
+    start.add_argument(
+        "--wake-threshold",
+        type=float,
+        help="Wake word sensitivity 0..1 (higher = fewer false triggers).",
+    )
+    start.add_argument(
+        "--no-chime",
+        action="store_true",
+        help="Disable the acknowledgement tone after the wake word.",
+    )
     start.add_argument(
         "--forget",
         action="store_true",

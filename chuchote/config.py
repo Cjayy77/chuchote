@@ -40,6 +40,24 @@ class Config:
     # and the tail of your sentence isn't clipped.
     ptt_tail_seconds: float = 0.4
 
+    # --- Turn-taking mode -------------------------------------------------
+    # "wake": always-on, triggered by a wake word + Silero VAD end-of-turn.
+    # "ptt":  push-to-talk fallback (hold ptt_key).
+    mode: str = "wake"
+
+    # --- Wake word (openWakeWord) ----------------------------------------
+    # Pretrained model name shipped with openWakeWord, e.g. "hey_jarvis",
+    # "alexa", "hey_mycroft". Downloaded once via openwakeword.
+    wake_model: str = "hey_jarvis"
+    wake_threshold: float = 0.5  # detection score 0..1; raise to reduce false triggers
+    wake_chime: bool = True  # play a short tone to acknowledge the wake word
+
+    # --- VAD (Silero, end-of-turn) ---------------------------------------
+    vad_speech_threshold: float = 0.5  # per-frame speech probability cutoff
+    vad_silence_ms: int = 800  # trailing silence that ends a turn
+    vad_start_timeout_s: float = 8.0  # give up if no speech after the wake word
+    vad_max_utterance_s: float = 30.0  # hard cap on a single utterance
+
     # --- STT (faster-whisper) ---------------------------------------------
     # "base.en" is a good latency/quality tradeoff for a first loop on CPU.
     whisper_model: str = "base.en"
