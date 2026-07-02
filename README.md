@@ -74,6 +74,26 @@ open speakers). With headphones you can use `--barge-in vad` so *any* speech
 interrupts; `--barge-in off` lets every reply finish. In push-to-talk mode,
 pressing the PTT key cuts off the reply (then hold it to speak again).
 
+### Custom wake words
+
+`--wake-word` accepts a **file path** as well as a built-in name, so you can
+use any openWakeWord-compatible model:
+
+```sh
+chuchote start --wake-word path/to/hey_chuchote.onnx
+```
+
+To create one for your own phrase, use openWakeWord's automatic training
+notebook — see [Training New Models](https://github.com/dscripka/openWakeWord#training-new-models)
+in their README. It generates synthetic speech for your phrase and trains a
+model in roughly an hour, no voice recordings needed; download the resulting
+`.onnx` and point `--wake-word` (or `wake_model` in your config) at it.
+
+> Note: the training notebook runs on Google Colab (a free cloud notebook) —
+> that's one-time, dev-machine tooling, like downloading a Piper voice. The
+> resulting model runs fully locally; nothing about the assistant touches the
+> network.
+
 ### Push-to-talk fallback
 
 Prefer holding a key? Skip the wake word entirely:
