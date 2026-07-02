@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chuchote"
+version = "0.1.0"
+description = "Local-first, hands-free voice assistant for Ollama."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Chuchote contributors" }]
+keywords = ["voice", "assistant", "ollama", "local", "whisper", "piper", "tts", "stt"]
+
+# Phase 1 (core round-trip) dependencies only. Wake word / VAD / memory
+# libraries are intentionally deferred to their build-order phases.
+dependencies = [
+    "sounddevice>=0.4.6",  # mic capture + speaker playback
+    "numpy>=1.24",         # audio buffers
+    "faster-whisper>=1.0", # local STT
+    "ollama>=0.3",         # local reasoning (talks to localhost:11434)
+    "piper-tts>=1.2",      # local TTS
+    "pynput>=1.7",         # push-to-talk key handling
+]
+
+[project.scripts]
+chuchote = "chuchote.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Cjayy77/chuchote"
+Repository = "https://github.com/Cjayy77/chuchote"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["chuchote*"]

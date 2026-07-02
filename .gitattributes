@@ -1,0 +1,7 @@
+# Normalize line endings: LF in the repo, checked out native on each platform.
+* text=auto eol=lf
+
+# Binary model files (defensive — these are gitignored, but if ever committed
+# they must not be line-ending mangled).
+*.onnx binary
+*.bin binary
