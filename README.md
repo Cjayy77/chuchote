@@ -80,6 +80,19 @@ chuchote start --ptt            # hold space to talk, release to send
 chuchote start --ptt --ptt-key ctrl
 ```
 
+## Checking your setup
+
+Not sure everything's wired up? Run the preflight check:
+
+```sh
+chuchote doctor
+```
+
+It verifies Ollama is reachable and the model is pulled, a Piper voice is
+present, your mic and speakers are detected, and (in wake mode) the wake-word
+deps are installed — reporting each as `[ ok ]` / `[fail]` and exiting non-zero
+if anything's wrong.
+
 ## Memory
 
 Chuchote remembers the conversation. Each exchange is stored in a SQLite
@@ -114,7 +127,7 @@ the full list and VAD tunables):
 | Flag | Default | Meaning |
 |---|---|---|
 | `--model` | `llama3.2` | Ollama model |
-| `--whisper-model` | `base.en` | faster-whisper model |
+| `--whisper-model` | `small.en` | faster-whisper model (`base.en`/`tiny.en` = faster) |
 | `--voice` | first `.onnx` in `./voices` | Piper voice model |
 | `--wake-word` | `hey_jarvis` | wake word model (`alexa`, `hey_mycroft`, `hey_rhasspy`) |
 | `--wake-threshold` | `0.5` | wake sensitivity 0..1 (higher = fewer false triggers) |

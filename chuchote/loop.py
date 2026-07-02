@@ -163,7 +163,7 @@ class Assistant:
         audio = self.recorder.record()
         prompt = self._transcribe(audio)
         if not prompt:
-            print("(heard nothing — try again)", flush=True)
+            print("(heard nothing - try again)", flush=True)
             return
         print(f"you: {prompt}")
         # Barge-in via the PTT key (unless disabled).
@@ -175,7 +175,7 @@ class Assistant:
         """Block until the wake word fires (or Ctrl+C between reads)."""
         self.wake.reset()
         print(
-            f"\n[listening — say the wake word ('{self.config.wake_model}')...]",
+            f"\n[listening - say the wake word ('{self.config.wake_model}')...]",
             flush=True,
         )
         while True:
@@ -233,11 +233,11 @@ class Assistant:
             mic.flush()  # drop the chime + any wake-word bleed
             audio = self._capture_utterance(mic)
             if audio is None or audio.size == 0:
-                print("(didn't catch anything — say the wake word again)")
+                print("(didn't catch anything - say the wake word again)")
                 return
             prompt = self._transcribe(audio)
             if not prompt:
-                print("(heard nothing — try again)")
+                print("(heard nothing - try again)")
                 return
             print(f"you: {prompt}")
             # Mic monitor always runs (it also drains the mic to prevent

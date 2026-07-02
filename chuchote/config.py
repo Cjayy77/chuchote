@@ -82,8 +82,9 @@ class Config:
     vad_max_utterance_s: float = 30.0  # hard cap on a single utterance
 
     # --- STT (faster-whisper) ---------------------------------------------
-    # "base.en" is a good latency/quality tradeoff for a first loop on CPU.
-    whisper_model: str = "base.en"
+    # "small.en" is accurate and still reasonable on CPU. Drop to "base.en"
+    # (faster, less accurate) or "tiny.en" on very slow machines.
+    whisper_model: str = "small.en"
     whisper_device: str = "auto"  # "cpu", "cuda", or "auto"
     whisper_compute_type: str = "default"
     whisper_beam_size: int = 5  # >1 = beam search (more accurate); 1 = greedy (faster)
@@ -184,7 +185,7 @@ CONFIG_TEMPLATE = """\
 # ptt_tail_seconds = 0.4
 
 # --- Speech-to-text (faster-whisper) ---
-# whisper_model = "base.en"  # try "small.en" for better accuracy
+# whisper_model = "small.en" # drop to "base.en"/"tiny.en" if too slow
 # whisper_device = "auto"    # "cpu", "cuda", or "auto"
 # whisper_compute_type = "default"
 # whisper_beam_size = 5      # >1 = more accurate; 1 = greedy/faster

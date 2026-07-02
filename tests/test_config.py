@@ -21,7 +21,7 @@ def test_file_overrides_defaults(tmp_path):
     assert cfg.ollama_model == "qwen2.5-coder:3b"
     assert cfg.wake_threshold == 0.7
     assert cfg.vad_silence_ms == 500
-    assert cfg.whisper_model == "base.en"  # untouched keys keep defaults
+    assert cfg.whisper_model == Config().whisper_model  # untouched keys keep defaults
 
 
 def test_unknown_keys_are_ignored(tmp_path, capsys):

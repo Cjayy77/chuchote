@@ -1,0 +1,34 @@
+"""Tests for the `chuchote doctor` result aggregation (checks are stubbed)."""
+
+from chuchote import doctor
+from chuchote.config import Config
+
+
+def _stub(monkeypatch, ollama_status, voice_status=doctor.OK, wake=None):
+    monkeypatch.setattr(doctor, "_check_config", lambda: (doctor.OK, "cfg"))
+    monkeypatch.setattr(doctor, "_check_ollama", lambda c: (ollama_status, "ollama"))
+    monkeypatch.setattr(doctor, "_check_voice", lambda c: (voice_status, "voice"))
+    monkeypatch.setattr(
+        doctor, "_check_audio", lambda: [(doctor.OK, "mic"), (doctor.OK, "spk")]
+    )
+    monkeypatch.setattr(doctor, "_check_wake_deps", lambda c: wake)
+
+
+def test_all_ok_passes(monkeypatch, capsys):
+    _stub(monkeypatch, doctor.OK)
+    assert doctor.run(Config()) is True
+    assert "All checks passed" in capsys.readouterr().out
+
+
+def test_any_fail_reports_and_returns_false(monkeypatch, capsys):
+    _stub(monkeypatch, doctor.FAIL, voice_status=doctor.FAIL)
+    assert doctor.run(Config()) is False
+    out = capsys.readouterr().out
+    assert "2 problem(s) found" in out
+    assert "[fail]" in out
+
+
+def test_wake_check_included_when_present(monkeypatch, capsys):
+    _stub(monkeypatch, doctor.OK, wake=(doctor.OK, "wake ready"))
+    assert doctor.run(Config()) is True
+    assert "wake ready" in capsys.readouterr().out

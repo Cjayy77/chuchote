@@ -53,6 +53,13 @@ def _cmd_forget(args: argparse.Namespace) -> None:
     print("Conversation memory cleared.")
 
 
+def _cmd_doctor(args: argparse.Namespace) -> None:
+    config = Config.load(args.config)
+    from .doctor import run
+
+    raise SystemExit(0 if run(config) else 1)
+
+
 def _cmd_init(args: argparse.Namespace) -> None:
     import os
 
@@ -121,6 +128,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     forget = sub.add_parser("forget", help="Erase all saved conversation memory.")
     forget.set_defaults(func=_cmd_forget)
+
+    doctor = sub.add_parser(
+        "doctor", help="Check Ollama, voice, and audio devices are ready."
+    )
+    doctor.add_argument("--config", help="Path to a config file (default: per-user config dir).")
+    doctor.set_defaults(func=_cmd_doctor)
 
     init = sub.add_parser("init", help="Write a default config file you can edit.")
     init.add_argument("--path", help="Where to write it (default: per-user config dir).")
