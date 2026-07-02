@@ -93,6 +93,43 @@ present, your mic and speakers are detected, and (in wake mode) the wake-word
 deps are installed — reporting each as `[ ok ]` / `[fail]` and exiting non-zero
 if anything's wrong.
 
+## Languages
+
+Chuchote isn't English-only — whisper understands ~99 languages and Piper has
+voices for dozens. To run it in another language, three things need to line up:
+
+1. **Recognition** — set `language` and use a **multilingual** whisper model
+   (the plain names like `small`, *not* the `.en` ones):
+   ```toml
+   language = "fr"
+   whisper_model = "small"
+   ```
+2. **Speech** — download a Piper voice for that language from
+   [VOICES.md](https://github.com/rhasspy/piper/blob/master/VOICES.md) into your
+   voices dir (or point `piper_voice` at it). Piper voices are one language each.
+3. **Reasoning** — pick an Ollama model that's good in your language (most
+   modern ones are multilingual; e.g. `qwen2.5` is strong for Chinese). Chuchote
+   already asks the model to reply in whatever language you speak.
+
+Then `chuchote doctor` will confirm the pieces match. Common starting points:
+
+| Language | `language` | Example Piper voice |
+|---|---|---|
+| French | `fr` | `fr_FR-siwis-medium` |
+| German | `de` | `de_DE-thorsten-medium` |
+| Spanish | `es` | `es_ES-davefx-medium` |
+| Italian | `it` | `it_IT-paola-medium` |
+| Portuguese (BR) | `pt` | `pt_BR-faber-medium` |
+| Dutch | `nl` | `nl_NL-mls-medium` |
+| Chinese | `zh` | `zh_CN-huayan-medium` |
+| Russian | `ru` | `ru_RU-dmitri-medium` |
+
+**Adding any other language:** find its voice on
+[VOICES.md](https://github.com/rhasspy/piper/blob/master/VOICES.md), set
+`language` to whisper's [code](https://github.com/openai/whisper#available-models-and-languages)
+for it, keep a multilingual `whisper_model`, and you're set. The wake word stays
+an English phrase (openWakeWord's built-ins are English) — or use `--ptt`.
+
 ## Memory
 
 Chuchote remembers the conversation. Each exchange is stored in a SQLite
@@ -128,6 +165,7 @@ the full list and VAD tunables):
 |---|---|---|
 | `--model` | `llama3.2` | Ollama model |
 | `--whisper-model` | `small.en` | faster-whisper model (`base.en`/`tiny.en` = faster) |
+| `--language` | `auto` | recognition language (`en`, `fr`, `de`, `zh`, …); needs a multilingual model |
 | `--voice` | first `.onnx` in `./voices` | Piper voice model |
 | `--wake-word` | `hey_jarvis` | wake word model (`alexa`, `hey_mycroft`, `hey_rhasspy`) |
 | `--wake-threshold` | `0.5` | wake sensitivity 0..1 (higher = fewer false triggers) |

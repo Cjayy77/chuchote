@@ -15,6 +15,8 @@ def _cmd_start(args: argparse.Namespace) -> None:
         config.ollama_model = args.model
     if args.whisper_model:
         config.whisper_model = args.whisper_model
+    if args.language:
+        config.language = args.language
     if args.voice:
         config.piper_voice = args.voice
     if args.ptt_key:
@@ -84,7 +86,11 @@ def build_parser() -> argparse.ArgumentParser:
     start = sub.add_parser("start", help="Start the voice assistant loop.")
     start.add_argument("--config", help="Path to a config file (default: per-user config dir).")
     start.add_argument("--model", help="Ollama model to use (e.g. llama3.2).")
-    start.add_argument("--whisper-model", help="faster-whisper model (e.g. base.en).")
+    start.add_argument("--whisper-model", help="faster-whisper model (e.g. small, small.en).")
+    start.add_argument(
+        "--language",
+        help="Recognition language code (e.g. en, fr, de, zh) or 'auto'.",
+    )
     start.add_argument("--voice", help="Path to a Piper .onnx voice model.")
     start.add_argument(
         "--ptt",

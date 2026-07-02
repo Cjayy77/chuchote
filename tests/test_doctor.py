@@ -32,3 +32,20 @@ def test_wake_check_included_when_present(monkeypatch, capsys):
     _stub(monkeypatch, doctor.OK, wake=(doctor.OK, "wake ready"))
     assert doctor.run(Config()) is True
     assert "wake ready" in capsys.readouterr().out
+
+
+def test_language_check_skipped_for_english_or_auto():
+    assert doctor._check_language(Config(language="auto")) is None
+    assert doctor._check_language(Config(language="en")) is None
+
+
+def test_language_check_warns_on_english_only_model():
+    status, msg = doctor._check_language(
+        Config(language="fr", whisper_model="small.en")
+    )
+    assert status == doctor.WARN and "multilingual" in msg
+
+
+def test_language_check_ok_with_multilingual_model():
+    status, _ = doctor._check_language(Config(language="fr", whisper_model="small"))
+    assert status == doctor.OK

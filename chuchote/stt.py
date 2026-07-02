@@ -32,6 +32,17 @@ class Transcriber:
         """Load the model now (fail fast + avoid first-turn latency)."""
         self._ensure_model()
 
+    def _language(self) -> str | None:
+        """Language code passed to whisper, or None to auto-detect.
+
+        English-only models (*.en) can only do English. Otherwise honour the
+        configured language, treating "auto"/empty as detect.
+        """
+        if self.config.whisper_model.endswith(".en"):
+            return "en"
+        lang = (self.config.language or "auto").lower()
+        return None if lang == "auto" else lang
+
     def transcribe(self, samples: np.ndarray) -> str:
         """Transcribe mono float32 samples (already at config.sample_rate)."""
         if samples.size == 0:
@@ -41,7 +52,7 @@ class Transcriber:
         # faster-whisper accepts a float32 numpy array at 16 kHz directly.
         segments, _info = model.transcribe(
             samples.astype(np.float32),
-            language="en" if self.config.whisper_model.endswith(".en") else None,
+            language=self._language(),
             # Beam search (default 5) is noticeably more accurate than greedy;
             # transcription is a small slice of the turn, so it's worth it.
             beam_size=self.config.whisper_beam_size,

@@ -81,9 +81,18 @@ class Config:
     vad_start_timeout_s: float = 8.0  # give up if no speech after the wake word
     vad_max_utterance_s: float = 30.0  # hard cap on a single utterance
 
+    # --- Language ---------------------------------------------------------
+    # Recognition language, e.g. "en", "fr", "de", "es", "it", "zh". "auto"
+    # lets whisper detect it. English-only whisper models (*.en) always use
+    # English regardless. For any non-English language you also need a
+    # MULTILINGUAL whisper model (e.g. "small", not "small.en") and a matching
+    # Piper voice — see the "Languages" section of the README.
+    language: str = "auto"
+
     # --- STT (faster-whisper) ---------------------------------------------
     # "small.en" is accurate and still reasonable on CPU. Drop to "base.en"
-    # (faster, less accurate) or "tiny.en" on very slow machines.
+    # (faster, less accurate) or "tiny.en" on very slow machines. Use the
+    # multilingual variants ("small", "base", ...) for non-English languages.
     whisper_model: str = "small.en"
     whisper_device: str = "auto"  # "cpu", "cuda", or "auto"
     whisper_compute_type: str = "default"
@@ -96,7 +105,8 @@ class Config:
         "You are Chuchote, a concise, friendly voice assistant. "
         "You are being spoken to out loud and your replies are read aloud, "
         "so keep answers short and conversational. Avoid markdown, lists, "
-        "code blocks, and emoji — just speak in plain sentences."
+        "code blocks, and emoji — just speak in plain sentences. "
+        "Always reply in the same language the person is speaking to you."
     )
 
     # --- TTS (Piper) ------------------------------------------------------
@@ -184,8 +194,13 @@ CONFIG_TEMPLATE = """\
 # ptt_key = "space"
 # ptt_tail_seconds = 0.4
 
+# --- Language ---
+# language = "auto"          # "en", "fr", "de", "es", "zh", ... or "auto".
+                             # Non-English also needs a multilingual whisper
+                             # model + a matching Piper voice (see README).
+
 # --- Speech-to-text (faster-whisper) ---
-# whisper_model = "small.en" # drop to "base.en"/"tiny.en" if too slow
+# whisper_model = "small.en" # use "small" (no .en) for non-English languages
 # whisper_device = "auto"    # "cpu", "cuda", or "auto"
 # whisper_compute_type = "default"
 # whisper_beam_size = 5      # >1 = more accurate; 1 = greedy/faster

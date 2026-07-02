@@ -64,6 +64,18 @@ def _check_audio() -> list[tuple[str, str]]:
     ]
 
 
+def _check_language(config: Config) -> tuple[str, str] | None:
+    lang = (config.language or "auto").lower()
+    if lang in ("auto", "en"):
+        return None
+    if config.whisper_model.endswith(".en"):
+        return WARN, (
+            f"Language '{lang}' set, but whisper model '{config.whisper_model}' "
+            "is English-only. Use a multilingual model like 'small'."
+        )
+    return OK, f"Language: {lang} (make sure your Piper voice matches)"
+
+
 def _check_wake_deps(config: Config) -> tuple[str, str] | None:
     if config.mode != "wake":
         return None
@@ -82,9 +94,9 @@ def run(config: Config) -> bool:
     results: list[tuple[str, str]] = [_check_config(), _check_ollama(config)]
     results.append(_check_voice(config))
     results.extend(_check_audio())
-    wake = _check_wake_deps(config)
-    if wake is not None:
-        results.append(wake)
+    for optional in (_check_language(config), _check_wake_deps(config)):
+        if optional is not None:
+            results.append(optional)
 
     for status, message in results:
         print(f"  {_TAG[status]} {message}")
