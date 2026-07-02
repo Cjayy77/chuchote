@@ -42,7 +42,12 @@ class Transcriber:
         segments, _info = model.transcribe(
             samples.astype(np.float32),
             language="en" if self.config.whisper_model.endswith(".en") else None,
-            beam_size=1,  # greedy — lowest latency for a first loop
+            # Beam search (default 5) is noticeably more accurate than greedy;
+            # transcription is a small slice of the turn, so it's worth it.
+            beam_size=self.config.whisper_beam_size,
             vad_filter=True,  # trims leading/trailing silence
+            # Each capture is an independent utterance, so don't let a previous
+            # turn's text bias decoding (avoids repetition/hallucination loops).
+            condition_on_previous_text=False,
         )
         return " ".join(seg.text.strip() for seg in segments).strip()

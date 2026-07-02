@@ -126,6 +126,16 @@ the full list and VAD tunables):
 | `--no-banner` | off | don't print the startup banner |
 | `--config` | per-user config dir | path to a config file |
 
+## Development
+
+Run the test suite (covers the pure logic — sentence chunking, memory, config
+precedence, banner styling — with no audio/model deps needed):
+
+```sh
+pip install -e ".[dev]"
+pytest
+```
+
 ## License
 
 MIT.

@@ -6,6 +6,7 @@ build/
 dist/
 .venv/
 venv/
+.pytest_cache/
 
 # Downloaded model files
 voices/*.onnx

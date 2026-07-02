@@ -86,6 +86,7 @@ class Config:
     whisper_model: str = "base.en"
     whisper_device: str = "auto"  # "cpu", "cuda", or "auto"
     whisper_compute_type: str = "default"
+    whisper_beam_size: int = 5  # >1 = beam search (more accurate); 1 = greedy (faster)
 
     # --- Reasoning (Ollama) ----------------------------------------------
     ollama_host: str = "http://localhost:11434"
@@ -186,6 +187,7 @@ CONFIG_TEMPLATE = """\
 # whisper_model = "base.en"  # try "small.en" for better accuracy
 # whisper_device = "auto"    # "cpu", "cuda", or "auto"
 # whisper_compute_type = "default"
+# whisper_beam_size = 5      # >1 = more accurate; 1 = greedy/faster
 
 # --- Text-to-speech (Piper) ---
 # piper_voice = ""           # path to a .onnx voice; blank = auto-discover

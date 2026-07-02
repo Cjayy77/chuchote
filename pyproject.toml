@@ -23,6 +23,9 @@ dependencies = [
     "pysilero-vad>=2.0",   # end-of-turn detection (Silero VAD, onnxruntime)
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
 [project.scripts]
 chuchote = "chuchote.cli:main"
 
@@ -33,3 +36,6 @@ Repository = "https://github.com/Cjayy77/chuchote"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["chuchote*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
