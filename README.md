@@ -1,5 +1,8 @@
 # Chuchote
 
+[![CI](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml/badge.svg)](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk
 to a local LLM and get a spoken answer — wake word → speech-to-text → local
 reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
@@ -186,6 +189,16 @@ precedence, banner styling — with no audio/model deps needed):
 pip install -e ".[dev]"
 pytest
 ```
+
+Tests also run in CI (GitHub Actions) on Linux and Windows, Python 3.10–3.13.
+
+### Releasing
+
+Publishing a GitHub release triggers the `publish.yml` workflow, which builds
+and uploads to PyPI via [trusted publishing](https://docs.pypi.org/trusted-publishers/)
+— no API token. One-time setup on pypi.org: add a *trusted publisher* for this
+repo (owner `Cjayy77`, repo `chuchote`, workflow `publish.yml`, environment
+`pypi`), and create a matching `pypi` environment in the repo's GitHub settings.
 
 ## License
 
