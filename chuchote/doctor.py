@@ -105,8 +105,14 @@ def _check_memory(config: Config) -> tuple[str, str] | None:
         return None
     if free < 1.5:
         return WARN, (
-            f"Low free RAM ({free:.1f} GB). Model loading may fail - close some "
-            "apps, or use a smaller whisper_model (base.en / tiny.en)."
+            f"Very low free RAM ({free:.1f} GB). Even speech models may fail to "
+            "load - close some apps, or use a smaller whisper_model (tiny.en)."
+        )
+    if free < 3.0:
+        return WARN, (
+            f"Free RAM: {free:.1f} GB - enough for chuchote itself, but Ollama "
+            f"may fail to load '{config.ollama_model}' (a ~3B model needs "
+            "~2.5 GB). Close some apps or use a smaller model (e.g. llama3.2:1b)."
         )
     return OK, f"Free RAM: {free:.1f} GB"
 

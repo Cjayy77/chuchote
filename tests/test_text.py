@@ -1,6 +1,6 @@
-"""Tests for the streaming sentence chunker that drives TTS latency."""
+"""Tests for the streaming sentence chunker and failure explainer."""
 
-from chuchote.text import drain_sentences
+from chuchote.text import drain_sentences, explain_failure
 
 
 def test_splits_completed_sentences_and_keeps_remainder():
@@ -36,3 +36,18 @@ def test_ellipsis_and_multiple_terminators():
     sentences, rest = drain_sentences("Wait... really?! Yes")
     assert sentences == ["Wait...", "really?!"]
     assert rest == " Yes"
+
+
+def test_explain_failure_adds_hint_for_oom():
+    exc = RuntimeError(
+        "llama-server process no longer running: exit status 1 "
+        "ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer"
+    )
+    out = explain_failure(exc, "qwen2.5-coder:3b")
+    assert "not enough free RAM" in out
+    assert "qwen2.5-coder:3b" in out
+
+
+def test_explain_failure_passes_through_other_errors():
+    exc = RuntimeError("connection refused")
+    assert explain_failure(exc, "x") == "connection refused"

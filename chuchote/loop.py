@@ -24,7 +24,7 @@ from .config import Config
 from .llm import Reasoner
 from .memory import Memory
 from .stt import Transcriber
-from .text import drain_sentences
+from .text import drain_sentences, explain_failure
 from .tts import Speaker
 from .vad import FRAME_SAMPLES as VAD_FRAME
 from .vad import EndpointDetector
@@ -258,7 +258,10 @@ class Assistant:
                 except KeyboardInterrupt:
                     raise
                 except Exception as exc:  # noqa: BLE001 — keep the daemon alive
-                    print(f"\n[turn failed: {exc}]", file=sys.stderr)
+                    print(
+                        f"\n[turn failed: {explain_failure(exc, self.config.ollama_model)}]",
+                        file=sys.stderr,
+                    )
 
     # --- entry point ------------------------------------------------------
     def run(self) -> None:
@@ -289,7 +292,10 @@ class Assistant:
                     except KeyboardInterrupt:
                         raise
                     except Exception as exc:  # noqa: BLE001
-                        print(f"\n[turn failed: {exc}]", file=sys.stderr)
+                        print(
+                            f"\n[turn failed: {explain_failure(exc, self.config.ollama_model)}]",
+                            file=sys.stderr,
+                        )
             else:
                 self._wake_session()
         except KeyboardInterrupt:

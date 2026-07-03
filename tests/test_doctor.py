@@ -57,6 +57,12 @@ def test_memory_check_warns_when_tight(monkeypatch):
     assert status == doctor.WARN and "0.4" in msg
 
 
+def test_memory_check_warns_when_llm_wont_fit(monkeypatch):
+    monkeypatch.setattr(doctor, "_free_ram_gb", lambda: 2.0)
+    status, msg = doctor._check_memory(Config(ollama_model="qwen2.5-coder:3b"))
+    assert status == doctor.WARN and "qwen2.5-coder:3b" in msg
+
+
 def test_memory_check_ok_with_headroom(monkeypatch):
     monkeypatch.setattr(doctor, "_free_ram_gb", lambda: 6.0)
     status, _ = doctor._check_memory(Config())
