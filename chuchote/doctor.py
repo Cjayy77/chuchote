@@ -64,6 +64,53 @@ def _check_audio() -> list[tuple[str, str]]:
     ]
 
 
+def _free_ram_gb() -> float | None:
+    """Available physical memory in GB, or None if unknowable (best-effort)."""
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class MemoryStatusEx(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_uint32),
+                    ("dwMemoryLoad", ctypes.c_uint32),
+                    ("ullTotalPhys", ctypes.c_uint64),
+                    ("ullAvailPhys", ctypes.c_uint64),
+                    ("ullTotalPageFile", ctypes.c_uint64),
+                    ("ullAvailPageFile", ctypes.c_uint64),
+                    ("ullTotalVirtual", ctypes.c_uint64),
+                    ("ullAvailVirtual", ctypes.c_uint64),
+                    ("ullAvailExtendedVirtual", ctypes.c_uint64),
+                ]
+
+            stat = MemoryStatusEx()
+            stat.dwLength = ctypes.sizeof(stat)
+            if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+                return None
+            return stat.ullAvailPhys / 1024**3
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_AVPHYS_PAGES") / 1024**3
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _check_memory(config: Config) -> tuple[str, str] | None:
+    """Warn when free RAM is too tight to load the models.
+
+    Loading whisper needs headroom beyond the model's final size (weights are
+    converted in memory), and Ollama's LLM lives in RAM too. Low free memory
+    is exactly what turns into an opaque `mkl_malloc` crash at startup.
+    """
+    free = _free_ram_gb()
+    if free is None:
+        return None
+    if free < 1.5:
+        return WARN, (
+            f"Low free RAM ({free:.1f} GB). Model loading may fail - close some "
+            "apps, or use a smaller whisper_model (base.en / tiny.en)."
+        )
+    return OK, f"Free RAM: {free:.1f} GB"
+
+
 def _check_language(config: Config) -> tuple[str, str] | None:
     lang = (config.language or "auto").lower()
     if lang in ("auto", "en"):
@@ -94,7 +141,11 @@ def run(config: Config) -> bool:
     results: list[tuple[str, str]] = [_check_config(), _check_ollama(config)]
     results.append(_check_voice(config))
     results.extend(_check_audio())
-    for optional in (_check_language(config), _check_wake_deps(config)):
+    for optional in (
+        _check_memory(config),
+        _check_language(config),
+        _check_wake_deps(config),
+    ):
         if optional is not None:
             results.append(optional)
 

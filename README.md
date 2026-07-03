@@ -122,10 +122,11 @@ Chuchote isn't English-only — whisper understands ~99 languages and Piper has
 voices for dozens. To run it in another language, three things need to line up:
 
 1. **Recognition** — set `language` and use a **multilingual** whisper model
-   (the plain names like `small`, *not* the `.en` ones):
+   (the plain names, *not* the `.en` ones — `base` on low-RAM machines,
+   `small` for better accuracy):
    ```toml
    language = "fr"
-   whisper_model = "small"
+   whisper_model = "base"
    ```
 2. **Speech** — download a Piper voice for that language from
    [VOICES.md](https://github.com/rhasspy/piper/blob/master/VOICES.md) into your
@@ -187,7 +188,7 @@ the full list and VAD tunables):
 | Flag | Default | Meaning |
 |---|---|---|
 | `--model` | `llama3.2` | Ollama model |
-| `--whisper-model` | `small.en` | faster-whisper model (`base.en`/`tiny.en` = faster) |
+| `--whisper-model` | `base.en` | faster-whisper model (`small.en` = more accurate, needs ~1 GB free RAM) |
 | `--language` | `auto` | recognition language (`en`, `fr`, `de`, `zh`, …); needs a multilingual model |
 | `--voice` | first `.onnx` in `./voices` | Piper voice model |
 | `--wake-word` | `hey_jarvis` | wake word model (`alexa`, `hey_mycroft`, `hey_rhasspy`) |

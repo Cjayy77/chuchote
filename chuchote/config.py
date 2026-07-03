@@ -90,12 +90,16 @@ class Config:
     language: str = "auto"
 
     # --- STT (faster-whisper) ---------------------------------------------
-    # "small.en" is accurate and still reasonable on CPU. Drop to "base.en"
-    # (faster, less accurate) or "tiny.en" on very slow machines. Use the
-    # multilingual variants ("small", "base", ...) for non-English languages.
-    whisper_model: str = "small.en"
+    # "base.en" loads reliably even on 8 GB machines with other apps open;
+    # "small.en" is noticeably more accurate but needs ~1 GB free RAM to
+    # load. Use the multilingual variants ("base", "small", ...) for
+    # non-English languages.
+    whisper_model: str = "base.en"
     whisper_device: str = "auto"  # "cpu", "cuda", or "auto"
-    whisper_compute_type: str = "default"
+    # int8 quantization: ~4x less memory and faster on CPU, near-identical
+    # accuracy. "default" (the model's saved float16) gets converted to
+    # float32 on CPUs, which can exhaust RAM on smaller machines.
+    whisper_compute_type: str = "int8"
     whisper_beam_size: int = 5  # >1 = beam search (more accurate); 1 = greedy (faster)
 
     # --- Reasoning (Ollama) ----------------------------------------------
@@ -203,9 +207,10 @@ CONFIG_TEMPLATE = """\
                              # model + a matching Piper voice (see README).
 
 # --- Speech-to-text (faster-whisper) ---
-# whisper_model = "small.en" # use "small" (no .en) for non-English languages
+# whisper_model = "base.en"  # "small.en" = more accurate, needs ~1 GB free RAM;
+                             # use "base"/"small" (no .en) for other languages
 # whisper_device = "auto"    # "cpu", "cuda", or "auto"
-# whisper_compute_type = "default"
+# whisper_compute_type = "int8"  # low-memory + fast on CPU; "default" = model's own
 # whisper_beam_size = 5      # >1 = more accurate; 1 = greedy/faster
 
 # --- Text-to-speech (Piper) ---

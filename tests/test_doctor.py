@@ -49,3 +49,20 @@ def test_language_check_warns_on_english_only_model():
 def test_language_check_ok_with_multilingual_model():
     status, _ = doctor._check_language(Config(language="fr", whisper_model="small"))
     assert status == doctor.OK
+
+
+def test_memory_check_warns_when_tight(monkeypatch):
+    monkeypatch.setattr(doctor, "_free_ram_gb", lambda: 0.4)
+    status, msg = doctor._check_memory(Config())
+    assert status == doctor.WARN and "0.4" in msg
+
+
+def test_memory_check_ok_with_headroom(monkeypatch):
+    monkeypatch.setattr(doctor, "_free_ram_gb", lambda: 6.0)
+    status, _ = doctor._check_memory(Config())
+    assert status == doctor.OK
+
+
+def test_memory_check_skipped_when_unknown(monkeypatch):
+    monkeypatch.setattr(doctor, "_free_ram_gb", lambda: None)
+    assert doctor._check_memory(Config()) is None
