@@ -1,6 +1,7 @@
 # Chuchote
 
 [![CI](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml/badge.svg)](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/chuchote)](https://pypi.org/project/chuchote/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk
@@ -34,6 +35,22 @@ The wake word (openWakeWord) and VAD (Silero) both run locally on onnxruntime.
 ## Install
 
 ```sh
+pip install chuchote
+```
+
+Then grab a [Piper voice](https://github.com/rhasspy/piper/blob/master/VOICES.md)
+(`.onnx` + `.onnx.json`) into a `voices/` folder next to where you run it (or
+set `piper_voice` in your config), and check everything's wired up:
+
+```sh
+chuchote doctor
+```
+
+### From source (development)
+
+```sh
+git clone https://github.com/Cjayy77/chuchote.git
+cd chuchote
 python -m venv .venv
 # Windows:  .venv\Scripts\activate
 # macOS/Linux:  source .venv/bin/activate
