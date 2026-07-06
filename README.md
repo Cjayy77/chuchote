@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/chuchote)](https://pypi.org/project/chuchote/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk
+Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk 
 to a local LLM and get a spoken answer — wake word → speech-to-text → local
 reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
 
