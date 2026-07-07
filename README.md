@@ -12,7 +12,7 @@ reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
 > (Silero VAD end-of-turn) → faster-whisper → Ollama → Piper → speaker, with
 > memory across restarts, barge-in to interrupt a reply, overlapped synthesis,
 > a config file, and an install script. Push-to-talk remains a fallback
-> (`--ptt`). See [CLAUDE.md](CLAUDE.md) for what's next.
+> (`--ptt`). 
 
 ## Pipeline
 
