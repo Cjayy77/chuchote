@@ -8,11 +8,6 @@ Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk
 to a local LLM and get a spoken answer — wake word → speech-to-text → local
 reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
 
-> **Status: Phase 5 — the CLI MVP is complete.** Wake word → speech capture
-> (Silero VAD end-of-turn) → faster-whisper → Ollama → Piper → speaker, with
-> memory across restarts, barge-in to interrupt a reply, overlapped synthesis,
-> a config file, and an install script. Push-to-talk remains a fallback
-> (`--ptt`). 
 
 ## Pipeline
 
