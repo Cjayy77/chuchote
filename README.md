@@ -1,4 +1,4 @@
-#   <img src="chuchote-logo.png" width="15%" /> Chuchote
+#   <img src="chuchote-logo.png" width="5%" /> Chuchote
 
 [![CI](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml/badge.svg)](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/chuchote)](https://pypi.org/project/chuchote/)
