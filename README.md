@@ -1,4 +1,4 @@
-# Chuchote
+#   <img src="doaBanner.png" width="45%" /> Chuchote
 
 [![CI](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml/badge.svg)](https://github.com/Cjayy77/chuchote/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/chuchote)](https://pypi.org/project/chuchote/)
