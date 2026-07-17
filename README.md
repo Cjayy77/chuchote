@@ -7,7 +7,7 @@
 Local-first, hands-free voice assistant for [Ollama](https://ollama.com). Talk 
 to a local LLM and get a spoken answer — wake word → speech-to-text → local
 reasoning → text-to-speech, running entirely on your machine. No cloud, ever.
-  
+   
    
 ## Pipeline
 
